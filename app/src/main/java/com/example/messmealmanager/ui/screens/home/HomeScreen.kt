@@ -60,7 +60,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.ui.platform.LocalContext
 import com.example.messmealmanager.model.Sheet
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -281,6 +283,8 @@ fun MySheetsSection(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.outline
                 )
+                Spacer(modifier = Modifier.height(24.dp))
+                PoweredByFooter()
             }
         }
     } else {
@@ -294,6 +298,9 @@ fun MySheetsSection(
                     currentUserId = currentUserId,
                     onClick = { onSheetClick(sheet) }
                 )
+            }
+            item {
+                PoweredByFooter()
             }
         }
     }
@@ -640,4 +647,35 @@ fun CreateSheetDialog(
             }
         }
     )
+}
+
+@Composable
+fun PoweredByFooter() {
+    val context = LocalContext.current
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                try {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://m-873.github.io/M873"))
+                    context.startActivity(intent)
+                } catch (e: Exception) {
+                    // Ignore if browser intent fails
+                }
+            }
+            .padding(vertical = 12.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Powered by ",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.outline
+        )
+        Text(
+            text = "M873",
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.primary
+        )
+    }
 }
