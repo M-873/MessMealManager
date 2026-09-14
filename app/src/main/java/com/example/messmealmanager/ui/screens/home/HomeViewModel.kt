@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.messmealmanager.auth.AuthManager
 import com.example.messmealmanager.data.FirestoreRepository
+import com.example.messmealmanager.model.Member
 import com.example.messmealmanager.model.Sheet
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -29,7 +30,19 @@ class HomeViewModel(
 
     val currentUser = authManager.currentUser
     val currentUserId = currentUser?.uid ?: ""
-    val currentUserName = currentUser?.displayName ?: "User"
+
+    // Real-time stream of the current member's profile
+    val currentMember: StateFlow<Member?> = firestoreRepository
+        .getMemberFlow(currentUserId)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
+
+    val currentUserName: String
+        get() = currentMember.value?.name?.ifBlank { currentUser?.displayName ?: "User" }
+            ?: (currentUser?.displayName ?: "User")
 
     // Real-time stream of sheets where the user is an editor or owner
     val userSheets: StateFlow<List<Sheet>> = firestoreRepository

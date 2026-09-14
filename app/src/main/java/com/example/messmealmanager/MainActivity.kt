@@ -31,6 +31,9 @@ import com.example.messmealmanager.ui.screens.sheet.SheetDetailViewModel
 import com.example.messmealmanager.ui.theme.MessMealManagerTheme
 import com.example.messmealmanager.util.NetworkMonitor
 
+import com.example.messmealmanager.ui.screens.profile.ProfileScreen
+import com.example.messmealmanager.ui.screens.profile.ProfileViewModel
+
 class MainActivity : ComponentActivity() {
 
     private lateinit var networkMonitor: NetworkMonitor
@@ -119,10 +122,35 @@ fun AppNavigation(
                     onSheetClick = { sheet ->
                         navController.navigate("sheet_detail/${sheet.id}")
                     },
+                    onProfileClick = {
+                        navController.navigate("profile")
+                    },
                     onSignOut = {
                         signInViewModel.resetState()
                         navController.navigate("sign_in") {
-                            popUpTo("home") { inclusive = true }
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
+            composable("profile") {
+                val profileViewModel: ProfileViewModel = viewModel(
+                    factory = object : ViewModelProvider.Factory {
+                        @Suppress("UNCHECKED_CAST")
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                            return ProfileViewModel(firestoreRepository, authManager) as T
+                        }
+                    }
+                )
+
+                ProfileScreen(
+                    viewModel = profileViewModel,
+                    onNavigateBack = { navController.popBackStack() },
+                    onSignOut = {
+                        signInViewModel.resetState()
+                        navController.navigate("sign_in") {
+                            popUpTo(0) { inclusive = true }
                         }
                     }
                 )

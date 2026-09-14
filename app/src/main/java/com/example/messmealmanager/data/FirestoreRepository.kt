@@ -247,6 +247,28 @@ class FirestoreRepository {
             .await()
     }
 
+    /**
+     * Real-time stream of a single member.
+     */
+    fun getMemberFlow(userId: String): Flow<Member?> = callbackFlow {
+        val listener = db.collection("members").document(userId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                val member = snapshot?.toObject(Member::class.java)
+                trySend(member)
+            }
+        awaitClose { listener.remove() }
+    }
+
+    suspend fun updateMemberName(userId: String, newName: String) {
+        db.collection("members").document(userId)
+            .update("name", newName)
+            .await()
+    }
+
     // --- Daily Entries ---
     suspend fun addDailyEntry(entry: DailyEntry) {
         val docId = if (entry.id.isNotBlank()) entry.id else "${entry.sheetId}_${entry.date}"

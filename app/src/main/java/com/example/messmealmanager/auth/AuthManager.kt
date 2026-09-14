@@ -53,14 +53,15 @@ class AuthManager(
     }
 
     private suspend fun saveOrUpdateUserToFirestore(user: FirebaseUser) {
+        val existingMember = firestoreRepository.getMember(user.uid)
+        val nameToUse = existingMember?.name?.ifBlank { user.displayName } ?: (user.displayName ?: "User")
         val member = Member(
             userId = user.uid,
-            name = user.displayName ?: "Unknown",
-            photoUrl = user.photoUrl?.toString() ?: "",
-            email = user.email ?: ""
+            name = nameToUse,
+            photoUrl = user.photoUrl?.toString() ?: existingMember?.photoUrl ?: "",
+            email = user.email ?: existingMember?.email ?: ""
         )
         
-        // Use FirestoreRepository to create/update the member
         firestoreRepository.addOrUpdateMember(member)
     }
     

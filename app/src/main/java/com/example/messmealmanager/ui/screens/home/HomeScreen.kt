@@ -65,11 +65,14 @@ import com.example.messmealmanager.model.Sheet
 import java.text.SimpleDateFormat
 import java.util.Locale
 
+import coil.compose.AsyncImage
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel,
     onSheetClick: (Sheet) -> Unit = {},
+    onProfileClick: () -> Unit = {},
     onSignOut: () -> Unit = {}
 ) {
     val userSheets by viewModel.userSheets.collectAsState()
@@ -78,6 +81,11 @@ fun HomeScreen(
     val isSearching by viewModel.isSearching.collectAsState()
     val showCreateDialog by viewModel.showCreateDialog.collectAsState()
     val isCreating by viewModel.isCreating.collectAsState()
+    val currentMember by viewModel.currentMember.collectAsState()
+    val firebaseUser = viewModel.currentUser
+
+    val displayName = currentMember?.name?.ifBlank { firebaseUser?.displayName } ?: (firebaseUser?.displayName ?: "User")
+    val photoUrl = currentMember?.photoUrl?.ifBlank { firebaseUser?.photoUrl?.toString() } ?: (firebaseUser?.photoUrl?.toString() ?: "")
 
     Scaffold(
         topBar = {
@@ -89,19 +97,40 @@ fun HomeScreen(
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                         )
                         Text(
-                            text = "Welcome, ${viewModel.currentUserName}",
+                            text = "Welcome, $displayName",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 },
                 actions = {
-                    IconButton(onClick = { viewModel.signOut(onSignOut) }) {
-                        Icon(
-                            imageVector = Icons.Default.ExitToApp,
-                            contentDescription = "Sign Out",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                    IconButton(
+                        onClick = onProfileClick,
+                        modifier = Modifier.padding(end = 8.dp)
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            if (photoUrl.isNotBlank()) {
+                                AsyncImage(
+                                    model = photoUrl,
+                                    contentDescription = "Profile",
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(CircleShape)
+                                )
+                            } else {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text(
+                                        text = displayName.take(1).uppercase(),
+                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                }
+                            }
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(

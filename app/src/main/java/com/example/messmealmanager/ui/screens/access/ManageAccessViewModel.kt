@@ -131,7 +131,7 @@ class ManageAccessViewModel(
                 val member = firestoreRepository.findMemberByEmail(email)
                 _foundMember.value = member
                 if (member == null) {
-                    _errorMessage.value = "No registered user found with email \"$email\"."
+                    _errorMessage.value = "This user hasn't signed in to the app yet — ask them to sign in first, then try adding them again."
                 }
             } catch (e: Exception) {
                 _errorMessage.value = e.message ?: "Failed to search for member"
