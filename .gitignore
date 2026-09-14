@@ -1,0 +1,66 @@
+# Built application files
+*.apk
+*.aar
+*.ap_
+*.aab
+
+# Files for the ART/Dalvik VM
+*.dex
+
+# Java class files
+*.class
+
+# Generated files
+/bin/
+/gen/
+/out/
+build/
+**/build/
+.gradle/
+**/.gradle/
+
+# Android Studio / IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+.navigation/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Firebase / Secrets / Credentials
+google-services.json
+**/google-services.json
+*.jks
+*.keystore
+*.pepk
+keystore.properties
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Log and temp files
+*.log
+*.tmp
+*.bak
+*.swp
+build.log
+inst_user_settings.tmp
+
+# One-time assets & scripts
+MMM.jfif
+home_screenshot.png
+screenshot.png
+generate_icons.py

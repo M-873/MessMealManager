@@ -1,0 +1,85 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper: Check if user is owner or listed in editors array of a sheet
+    function isSheetEditor(sheetId) {
+      let sheet = get(/databases/$(database)/documents/sheets/$(sheetId));
+      return isAuthenticated() && (
+        request.auth.uid == sheet.data.ownerId ||
+        request.auth.uid in sheet.data.editors
+      );
+    }
+
+    // --- SHEETS COLLECTION ---
+    match /sheets/{sheetId} {
+      // 1. Any signed-in user can read any sheet for search and view access
+      allow read: if isAuthenticated();
+
+      // 2. Any signed-in user can create a sheet where they are the owner
+      allow create: if isAuthenticated() 
+        && request.resource.data.ownerId == request.auth.uid
+        && request.auth.uid in request.resource.data.editors;
+
+      // 3. Update permissions:
+      // - Modifying editors[] or viewers[] requires being the sheet owner
+      // - Other updates allowed for owner or any editor
+      allow update: if isAuthenticated() && (
+        (((request.resource.data.editors != resource.data.editors) || (request.resource.data.viewers != resource.data.viewers)) && resource.data.ownerId == request.auth.uid) ||
+        (request.resource.data.editors == resource.data.editors && (
+          resource.data.ownerId == request.auth.uid || 
+          request.auth.uid in resource.data.editors
+        ))
+      );
+
+      // 4. Only owner can delete their sheet
+      allow delete: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
+    }
+
+    // --- DAILY ENTRIES COLLECTION ---
+    match /dailyEntries/{entryId} {
+      // Any signed-in user can view entries (search/view feature)
+      allow read: if isAuthenticated();
+
+      // Only sheet owner or editors can create entries for that sheet
+      allow create: if isSheetEditor(request.resource.data.sheetId);
+
+      // Only sheet owner or editors can update or delete entries
+      allow update, delete: if isSheetEditor(resource.data.sheetId);
+    }
+
+    // --- DEPOSITS COLLECTION ---
+    match /deposits/{depositId} {
+      // Any signed-in user can view deposits
+      allow read: if isAuthenticated();
+
+      // Only sheet owner or editors can create deposits for that sheet
+      allow create: if isSheetEditor(request.resource.data.sheetId);
+
+      // Only sheet owner or editors can update or delete deposits
+      allow update, delete: if isSheetEditor(resource.data.sheetId);
+    }
+
+    // --- MEMBERS COLLECTION ---
+    match /members/{memberId} {
+      // Any signed-in user can read members (used for email search and profile display)
+      allow read: if isAuthenticated();
+
+      // Users can only create or update their own profile document
+      allow create, update: if isAuthenticated() && request.auth.uid == memberId;
+      allow delete: if false;
+    }
+
+    // --- COUNTERS (Auto-increment sheet numbers) ---
+    match /counters/{counterId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+  }
+}
